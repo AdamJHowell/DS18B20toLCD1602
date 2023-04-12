@@ -142,13 +142,13 @@ void loop()
 	}
 	else if( analogKeypadReading < 200 )
 	{
-		tempF0++;
+		tempF1++;
 		//		lcd.print( "Up    " );
 		Serial.println( "Up" );
 	}
 	else if( analogKeypadReading < 400 )
 	{
-		tempF0--;
+		tempF1--;
 		//		lcd.print( "Down  " );
 		Serial.println( "Down" );
 	}
