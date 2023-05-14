@@ -4,18 +4,21 @@
 #include <OneWire.h>
 
 // LCD pin assignment for the Arduino R3
-const int pin_RS        = 8;
-const int pin_EN        = 9;
-const int pin_d4        = 4;
-const int pin_d5        = 5;
-const int pin_d6        = 6;
-const int pin_d7        = 7;
-const int ONE_WIRE_BUS  = 3; // Use GPIO 3 for the Maxim DS18B20 temperature sensor signal.
-const int TIME_INTERVAL = 1500;
-const long pollInterval = 1000;
-unsigned long lasPoll   = 0;
-float tempF0            = 21.12;
-float tempF1            = 21.12;
+const int ONE_WIRE_BUS   = 3; // Use GPIO 3 for the Maxim DS18B20 temperature sensor signal.
+const int PIN_D4         = 4;
+const int PIN_D5         = 5;
+const int PIN_D6         = 6;
+const int PIN_D7         = 7;
+const int PIN_RS         = 8;
+const int PIN_EN         = 9;
+const int LCD_BACKLIGHT  = 10;
+const int TIME_INTERVAL  = 1500;
+const long POLL_INTERVAL = 1000;
+unsigned long lastPoll   = 0;
+unsigned long lastLight  = 0;
+const long BL_COOLDOWN   = 1000;
+float tempF0             = 21.12;
+float tempF1             = 21.12;
 
 // Custom LCD characters:
 byte degree[] = {
@@ -47,11 +50,23 @@ byte Bell[] = {
       B00100,
       B00000 };
 
-LiquidCrystal lcd( pin_RS, pin_EN, pin_d4, pin_d5, pin_d6, pin_d7 );
+LiquidCrystal lcd( PIN_RS, PIN_EN, PIN_D4, PIN_D5, PIN_D6, PIN_D7 );
 OneWire oneWire( ONE_WIRE_BUS );
 DallasTemperature dallasTemp( &oneWire );
 NonBlockingDallas sensorDs18b20( &dallasTemp );
 
+/**
+ * @brief This function is a "debounce" for the keypad buttons I've assigned to backlight changing.
+ * @param state 1 to turn one the backlight, 0 to turn the backlight off.
+ */
+void backLightChange( int state )
+{
+	if( millis() - lastLight > BL_COOLDOWN )
+	{
+		digitalWrite( LCD_BACKLIGHT, state );
+		lastLight = millis();
+	}
+} // End of backLightChange() function.
 
 // Invoked at every sensor reading (TIME_INTERVAL milliseconds)
 void handleIntervalElapsed( float temperature, bool valid, int deviceIndex )
@@ -99,6 +114,10 @@ void setup()
 		delay( 1000 );
 	Serial.println( "Setup has begun." );
 
+	// Set the backlight pin as an output, and turn the backlight on.
+	pinMode( LCD_BACKLIGHT, OUTPUT );
+	digitalWrite( LCD_BACKLIGHT, 1 );
+
 	// Set the number of columns and rows.
 	lcd.begin( 16, 2 );
 	lcd.clear();
@@ -134,38 +153,46 @@ void loop()
 	sensorDs18b20.update();
 	int analogKeypadReading = analogRead( 0 );
 
+	// Right button.
 	if( analogKeypadReading < 60 )
 	{
 		tempF0++;
-		//		lcd.print( "Right " );
 		Serial.println( "Right" );
 	}
+	// Up button.
 	else if( analogKeypadReading < 200 )
 	{
 		tempF1++;
-		//		lcd.print( "Up    " );
 		Serial.println( "Up" );
+		backLightChange( 1 );
 	}
+	// Down button.
 	else if( analogKeypadReading < 400 )
 	{
 		tempF1--;
-		//		lcd.print( "Down  " );
 		Serial.println( "Down" );
+		backLightChange( 0 );
 	}
+	// Left button.
 	else if( analogKeypadReading < 600 )
 	{
 		tempF0--;
 		//		lcd.print( "Left  " );
 		Serial.println( "Left" );
 	}
+	// Select button.
 	else if( analogKeypadReading < 800 )
 	{
 		//		lcd.print( "Select" );
 		Serial.println( "Select" );
 	}
+	else if( analogKeypadReading < 1022 )
+	{
+		Serial.print( "Unexpected keypad value: " );
+		Serial.println( analogKeypadReading );
+	}
 
-	unsigned long now = millis();
-	if( now - lasPoll >= pollInterval )
+	if( millis() - lastPoll >= POLL_INTERVAL )
 	{
 		// Move the cursor to the 10th column of the first row.
 		lcd.setCursor( 9, 0 );
@@ -185,6 +212,6 @@ void loop()
 		// Move the cursor to the 16th column of the second row.
 		lcd.setCursor( 15, 1 );
 		lcd.write( "F" );
-		lasPoll = now;
+		lastPoll = millis();
 	}
 } // End of the loop() function.
