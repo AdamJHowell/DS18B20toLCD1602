@@ -29,7 +29,7 @@ byte degree[] = {
       B00000,
       B00000,
       B00000,
-      B00000,
+      B00000
 };
 byte Heart[] = {
       B00000,
@@ -39,7 +39,8 @@ byte Heart[] = {
       B01110,
       B00100,
       B00000,
-      B00000 };
+      B00000
+};
 byte Bell[] = {
       B00100,
       B01110,
@@ -48,7 +49,8 @@ byte Bell[] = {
       B11111,
       B00000,
       B00100,
-      B00000 };
+      B00000
+};
 
 LiquidCrystal lcd( PIN_RS, PIN_EN, PIN_D4, PIN_D5, PIN_D6, PIN_D7 );
 OneWire oneWire( ONE_WIRE_BUS );
@@ -81,10 +83,7 @@ void handleIntervalElapsed( float temperature, bool valid, int deviceIndex )
 	else if( deviceIndex == 1 )
 		tempF1 = temperature;
 	else
-	{
-		Serial.print( "Unexpected device index: " );
-		Serial.println( deviceIndex );
-	}
+		Serial.printf( "Unexpected device index: %d\n", deviceIndex );
 } // End of the handleIntervalElapsed() function.
 
 //Invoked ONLY when the temperature changes between two sensor readings
@@ -100,10 +99,7 @@ void handleTemperatureChange( float temperature, bool valid, int deviceIndex )
 	else if( deviceIndex == 1 )
 		tempF1 = temperature;
 	else
-	{
-		Serial.print( "Unexpected device index: " );
-		Serial.println( deviceIndex );
-	}
+		Serial.printf( "Unexpected device index: %d\n", deviceIndex );
 } // End of the handleTemperatureChange() function.
 
 void setup()
@@ -187,10 +183,9 @@ void loop()
 		Serial.println( "Select" );
 	}
 	else if( analogKeypadReading < 1022 )
-	{
-		Serial.print( "Unexpected keypad value: " );
-		Serial.println( analogKeypadReading );
-	}
+  {
+		Serial.printf( "Unexpected keypad value: %d\n", analogKeypadReading );
+  }
 
 	if( millis() - lastPoll >= POLL_INTERVAL )
 	{
