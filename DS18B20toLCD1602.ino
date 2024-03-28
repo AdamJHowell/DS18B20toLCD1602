@@ -57,6 +57,7 @@ OneWire oneWire( ONE_WIRE_BUS );
 DallasTemperature dallasTemp( &oneWire );
 NonBlockingDallas sensorDs18b20( &dallasTemp );
 
+
 /**
  * @brief This function is a "debounce" for the keypad buttons I've assigned to backlight changing.
  * @param state 1 to turn one the backlight, 0 to turn the backlight off.
@@ -70,8 +71,9 @@ void backLightChange( int state )
 	}
 } // End of backLightChange() function.
 
+
 // Invoked at every sensor reading (TIME_INTERVAL milliseconds)
-void handleIntervalElapsed( float temperature, bool valid, int deviceIndex )
+void handleIntervalElapsed( int temperature, long int deviceIndex )
 {
 	//	Serial.printf( "Sensor %d changed temperature: %f °F\n", deviceIndex, temperature );
 	Serial.print( "Sensor : " );
@@ -83,11 +85,15 @@ void handleIntervalElapsed( float temperature, bool valid, int deviceIndex )
 	else if( deviceIndex == 1 )
 		tempF1 = temperature;
 	else
-		Serial.printf( "Unexpected device index: %d\n", deviceIndex );
+  {
+		Serial.print( "Unexpected device index: " );
+    Serial.println( deviceIndex );
+  }
 } // End of the handleIntervalElapsed() function.
 
+
 //Invoked ONLY when the temperature changes between two sensor readings
-void handleTemperatureChange( float temperature, bool valid, int deviceIndex )
+void handleTemperatureChange( int temperature, long int deviceIndex )
 {
 	//	Serial.printf( "Sensor %d changed temperature: %f °F\n", deviceIndex, temperature );
 	Serial.print( "Sensor : " );
@@ -98,9 +104,13 @@ void handleTemperatureChange( float temperature, bool valid, int deviceIndex )
 		tempF0 = temperature;
 	else if( deviceIndex == 1 )
 		tempF1 = temperature;
-	else
-		Serial.printf( "Unexpected device index: %d\n", deviceIndex );
+  else
+  {
+		Serial.print( "Unexpected device index: " );
+    Serial.println( deviceIndex );
+  }
 } // End of the handleTemperatureChange() function.
+
 
 void setup()
 {
@@ -133,7 +143,7 @@ void setup()
 	lcd.print( "Temp 2:" );
 
 	// Initialize the sensor passing the resolution, unit of measure and reading interval [milliseconds]
-	sensorDs18b20.begin( NonBlockingDallas::resolution_12, NonBlockingDallas::unit_F, TIME_INTERVAL );
+	sensorDs18b20.begin( NonBlockingDallas::resolution_12, TIME_INTERVAL );
 
 	// Callbacks
 	sensorDs18b20.onIntervalElapsed( handleIntervalElapsed );
@@ -143,6 +153,7 @@ void setup()
 	sensorDs18b20.requestTemperature();
 	Serial.println( "Setup has finished." );
 } // End of the setup() function.
+
 
 void loop()
 {
@@ -184,7 +195,8 @@ void loop()
 	}
 	else if( analogKeypadReading < 1022 )
   {
-		Serial.printf( "Unexpected keypad value: %d\n", analogKeypadReading );
+		Serial.print( "Unexpected keypad value: " );
+    Serial.println( analogKeypadReading );
   }
 
 	if( millis() - lastPoll >= POLL_INTERVAL )
